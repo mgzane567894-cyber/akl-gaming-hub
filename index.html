@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AKL Gaming HUB</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="splashScreen">
+    <div class="splash-content">
+        <div class="splash-icon"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjdlp1fH2LNUM_d5_6HInbfrVXdgNKSgB_93NNHAhGdxyruSsyo6qp-Ly9-c6jV6OaKJEFStGsZZSnstu14zPl-qz5QdTAJNLzxieVPDocLnfbnnrIih1rQNU0XX3cuxXhC1YlSPBk4RLuNLePJaTP3kE2AFnXcE4nwYhPdP8aIwCMPGDmgFcBnR8kGmhU/s1280/44697.png" alt="Logo"></div>
+        <h1 class="splash-title">AKL Gaming HUB</h1>
+        <div class="splash-loader"></div>
+    </div>
+</div>
+
+<div id="mainApp" style="display:none;">
+    <header class="app-header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">
+                    <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhjOc0nKLw9Dc7vnEr9MiYcpWJEsdxc30AZG07u_xkNzREy_G8796CK-cMwHh5julpufaRncCnlcgor4kan41hz1AMI6APrPO9irLlETgRcab-Dqz3jVYvVt9GWxKgr9_aoMyZhxCWfRUf7JyCNg24GWF6vnRWArt8S70f4ircALsXcWACU6nteQvSKZ8Q/s1283/44700.png" alt="AKL Gaming HUB Logo">
+                </div>
+                <span class="logo-text">AKL Gaming HUB</span>
+            </div>
+            
+            <div style="display: flex; align-items: center;">
+                <a href="https://t.me/s/aklgamesharing" target="_blank" rel="noopener noreferrer" class="tg-header-btn">📢 Join TG</a>
+                <button type="button" id="themeToggleBtn" onclick="toggleTheme()" style="background:none; border:none; cursor:pointer; font-size:20px; padding:5px;">🌙</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <!-- ဘန်နာပုံကြီး -->
+        <section class="hero-banner-section" id="heroBannerSection" style="margin-top: 6px; margin-bottom: 4px;">
+            <div class="hero-banner-card" id="heroBannerCard">
+                <!-- Javascript မှတစ်ဆင့် Banner ပုံ ဝင်ရောက်လာပါမည် -->
+            </div>
+        </section>
+
+        <!-- သတိပေးစာ စာတန်းပြေး (VPN Notice) -->
+        <div class="running-notice-container" style="margin-top: 0px; margin-bottom: 8px;">
+            <div class="running-notice-text">
+                🌐 မိုဘိုင်းဒေတာ ဖြင့် ဝင်ရောက်နေသူများ ဝဘ်ဆိုဒ်ထဲသို့ အဆင်ပြေပြေ ဝင်ရောက်နိုင်ရန် VPN ခံသုံးပေးပါရန်။ WiFi အသုံးပြုသူများအတွက်က VPN လုံးဝ မလိုဘဲ တိုက်ရိုက်အသုံးပြုနိုင်ပါပြီ 🚀
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-container" style="margin-bottom: 10px;">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" placeholder="Search games & apps..." class="search-input">
+            </div>
+        </div>
+
+        <!-- Games / Apps Tabs -->
+        <div class="type-tabs" style="margin-bottom: 14px;">
+            <button type="button" class="type-tab-btn active" id="tabGameBtn" onclick="switchContentType('game')">🕹️ Games</button>
+            <button type="button" class="type-tab-btn" id="tabAppBtn" onclick="switchContentType('app')">📱 Apps</button>
+        </div>
+
+        <!-- Categories Section -->
+        <section class="categories-section" id="categories">
+            <h2 class="section-title">📂 Categories</h2>
+            <div class="categories-scroll" id="categoriesList"></div>
+        </section>
+
+        <!-- Hot Games Section -->
+        <section class="games-section">
+            <div class="section-header-flex">
+                <h2 class="section-title" id="listSectionTitle">🔥 အထူးလူကြိုက်များသော (Hot Games)</h2>
+                <a href="#" class="see-all-link" onclick="showAllGames(event)">အားလုံးကြည့်ရန် &gt;</a>
+            </div>
+            <div class="games-grid-2col" id="gamesList"></div>
+            <div class="pagination-container" id="paginationContainer"></div>
+        </section>
+    </main>
+
+    <nav class="bottom-nav">
+        <button type="button" class="nav-item active" data-page="home" onclick="goHomePage()">🏠 Home</button>
+        <button type="button" class="nav-item" data-page="categories" onclick="goCategoriesPage()">📂 Categories</button>
+    </nav>
+</div>
+
+<!-- Local games.json ကို တိုက်ရိုက်ဖတ်မည့် script -->
+<script src="app.js"></script>
+</body>
+</html>

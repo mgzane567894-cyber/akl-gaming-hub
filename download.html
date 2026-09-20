@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download - AKL Gaming HUB</title>
+    
+    <!-- Adsterra Popunder Script (New Zone) -->
+    <script src="https://pl31398292.profitableratecpmnetwork.com/d2/d9/5a/d2d95abb550034d11591f120b4725d72.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f8fafc;
+            --meta-text: #94a3b8;
+            --border-color: #334155;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 500px;
+        }
+        .top-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .back-link {
+            text-decoration: none;
+            color: #60a5fa;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            border: 1px solid var(--border-color);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .game-icon {
+            width: 90px;
+            height: 90px;
+            border-radius: 14px;
+            object-fit: cover;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        }
+        h1 {
+            font-size: 18px;
+            margin: 0 0 15px 0;
+            line-height: 1.4;
+            color: #fff;
+        }
+        .progress-container {
+            width: 100%;
+            background: var(--border-color);
+            border-radius: 10px;
+            height: 10px;
+            overflow: hidden;
+            margin: 20px 0 10px 0;
+        }
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: #10b981;
+            border-radius: 10px;
+            transition: width 0.05s linear;
+        }
+        .timer-text {
+            font-size: 13px;
+            color: var(--meta-text);
+            margin-bottom: 10px;
+        }
+        .btn-group {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .download-btn {
+            background: #10b981;
+            color: white;
+            text-decoration: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            transition: background 0.2s;
+            cursor: pointer;
+            border: none;
+            width: 100%;
+            font-size: 14px;
+        }
+        .download-btn:hover {
+            background: #059669;
+        }
+        .notice-box {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: #fbbf24;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            text-align: left;
+            margin-top: 20px;
+            line-height: 1.6;
+        }
+        .section-box {
+            margin-top: 25px;
+            text-align: left;
+            padding-bottom: 15px;
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            color: #f8fafc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .section-title span {
+            font-size: 11px;
+            color: var(--meta-text);
+            font-weight: normal;
+        }
+        .horizontal-scroll {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            scrollbar-color: #10b981 var(--border-color);
+        }
+        .horizontal-scroll::-webkit-scrollbar {
+            height: 6px;
+        }
+        .horizontal-scroll::-webkit-scrollbar-track {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+        .horizontal-scroll::-webkit-scrollbar-thumb {
+            background: #10b981;
+            border-radius: 4px;
+        }
+        .game-card {
+            text-decoration: none;
+            background: var(--card-bg);
+            padding: 10px;
+            border-radius: 12px;
+            flex: 0 0 120px;
+            width: 120px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .game-card:hover {
+            transform: translateY(-3px);
+            border-color: #10b981;
+        }
+        .game-card img {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .game-card h4 {
+            color: var(--text-color);
+            font-size: 11px;
+            margin: 8px 0 2px 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .game-card p {
+            color: var(--meta-text);
+            font-size: 9px;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="top-bar">
+            <a href="javascript:history.back()" class="back-link">← Go Back / Game Details</a>
+        </div>
+
+        <div class="card" id="mainCard">
+            <div id="loadingState">
+                <img id="gameImage" src="" class="game-icon" alt="Game">
+                <h1 id="gameTitle">Loading game info...</h1>
+                
+                <div class="timer-container" id="timerContainer">
+                    <div class="timer-text" id="statusText">Preparing your download link...</div>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="progressBar"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="btn-group" id="btnGroup">
+                <a id="btnApk" class="download-btn" style="display:none; text-decoration:none;">
+                    📥 DOWNLOAD APK
+                </a>
+                <a id="btnObb" class="download-btn" style="display:none; background: #00838f; box-shadow: 0 4px 12px rgba(0, 131, 143, 0.3); text-decoration:none;">
+                    📦 DOWNLOAD OBB DATA
+                </a>
+            </div>
+
+            <div class="notice-box">
+                ℹ️ <b>ဒေါင်းလုဒ်ဆွဲရန် လမ်းညွှန်ချက်:</b><br>
+                • "DOWNLOAD APK" ကို နှိပ်လိုက်၍ ကြော်ငြာတက်လာပါက ဖုန်း၏ <b>Back (နောက်သို့) ခလုတ်</b> ဖြင့် တစ်ချက်ပြန်ထွက်ပေးပါ။<br>
+                • ပြီးလျှင် ဖိုင်ကို အလွယ်တကူ ဆက်လက်ဒေါင်းလုဒ်ဆွဲနိုင်ပါသည်။ ကျေးဇူးတင်ပါသည်!
+            </div>
+        </div>
+
+        <div class="section-box" id="recentGamesContainer"></div>
+        <div class="section-box" id="popularGamesContainer"></div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const gameId = urlParams.get('id');
+        const downloadType = urlParams.get('type'); // data, wifi, obb
+
+        const gameImage = document.getElementById("gameImage");
+        const gameTitle = document.getElementById("gameTitle");
+        const progressBar = document.getElementById("progressBar");
+        const timerContainer = document.getElementById("timerContainer");
+        const statusText = document.getElementById("statusText");
+        const btnGroup = document.getElementById("btnGroup");
+
+        const btnApk = document.getElementById("btnApk");
+        const btnObb = document.getElementById("btnObb");
+
+        function handleDownloadClick(e, downloadUrl) {
+            e.preventDefault();
+            if (!downloadUrl) return;
+
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.target = '_blank';
+            a.setAttribute('download', '');
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        async function initDownloadPage() {
+            if (!gameId) {
+                gameTitle.textContent = "❌ Game ID not found!";
+                timerContainer.style.display = "none";
+                return;
+            }
+
+            try {
+                const response = await fetch('games.json?' + new Date().getTime());
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const allItems = await response.json();
+                
+                const game = allItems.find(item => String(item.id).trim() === String(gameId).trim());
+
+                if (game) {
+                    const gameName = game.name || "Game";
+                    const gameVersion = game.version ? `v${game.version}` : "v1.0";
+                    gameTitle.textContent = `Download ${gameName} ${gameVersion}`;
+                    gameImage.src = game.icon || game.image || "https://via.placeholder.com/90";
+
+                    let apkUrl = "";
+                    if (downloadType === 'wifi') {
+                        apkUrl = game.wifiDownloadUrl || game.dataDownloadUrl || game.downloadUrl || "";
+                    } else if (downloadType === 'data') {
+                        apkUrl = game.dataDownloadUrl || game.downloadUrl || "";
+                    } else {
+                        apkUrl = game.dataDownloadUrl || game.downloadUrl || game.wifiDownloadUrl || "";
+                    }
+
+                    let obbUrl = game.obb_link || "";
+
+                    if (apkUrl) {
+                        btnApk.onclick = (e) => handleDownloadClick(e, apkUrl);
+                        btnApk.style.display = "flex";
+                        btnApk.textContent = downloadType === 'wifi' ? "📥 DOWNLOAD APK (WiFi User)" : (downloadType === 'data' ? "📥 DOWNLOAD APK (Data User)" : "📥 DOWNLOAD APK");
+                    }
+
+                    if (obbUrl) {
+                        btnObb.onclick = (e) => handleDownloadClick(e, obbUrl);
+                        btnObb.style.display = "flex";
+                    }
+
+                    const hasLoadedBefore = sessionStorage.getItem('download_ready_' + gameId);
+
+                    if (hasLoadedBefore) {
+                        timerContainer.style.display = "none";
+                        statusText.innerHTML = "<b>✅ Your download link is ready!</b>";
+                        btnGroup.style.display = "flex";
+                    } else {
+                        let duration = 2000;
+                        let intervalTime = 20;
+                        let step = (intervalTime / duration) * 100;
+                        let currentWidth = 0;
+
+                        const progressInterval = setInterval(() => {
+                            currentWidth += step;
+                            if (currentWidth >= 100) {
+                                currentWidth = 100;
+                                clearInterval(progressInterval);
+                                timerContainer.style.display = "none";
+                                statusText.innerHTML = "<b>✅ Your download link is ready!</b>";
+                                btnGroup.style.display = "flex";
+                                sessionStorage.setItem('download_ready_' + gameId, 'true');
+                            }
+                            progressBar.style.width = currentWidth + "%";
+                        }, intervalTime);
+                    }
+
+                    loadAllGameSections(allItems, gameId);
+
+                } else {
+                    gameTitle.textContent = "❌ Game not found in database!";
+                    timerContainer.style.display = "none";
+                }
+            } catch (e) {
+                console.error(e);
+                gameTitle.textContent = "❌ Error loading game data!";
+                timerContainer.style.display = "none";
+            }
+        }
+
+        function loadAllGameSections(allItems, currentId) {
+            try {
+                let gamesList = allItems.filter(item => String(item.id).trim() !== String(currentId).trim());
+                let shuffled = [...gamesList].sort(() => 0.5 - Math.random());
+                let midPoint = Math.ceil(shuffled.length / 2);
+                
+                let recentList = shuffled.slice(0, midPoint);
+                let popularList = shuffled.slice(midPoint);
+
+                if(popularList.length === 0) popularList = [...recentList].reverse();
+
+                let recentHtml = `
+                    <div class="section-title">
+                        ✨ Recently Added Games
+                        <span>Swipe →</span>
+                    </div>
+                    <div class="horizontal-scroll">
+                `;
+                recentList.forEach((game) => {
+                    const gameImg = game.icon || game.image || "🎮";
+                    recentHtml += `
+                        <a href="detail.html?id=${escapeHTML(game.id)}" class="game-card">
+                            <img src="${escapeHTML(gameImg)}" loading="lazy" alt="${escapeHTML(game.name)}">
+                            <h4>${escapeHTML(game.name || "Game")}</h4>
+                            <p>${escapeHTML(game.type || 'Android')}</p>
+                        </a>
+                    `;
+                });
+                recentHtml += `</div>`;
+                document.getElementById("recentGamesContainer").innerHTML = recentHtml;
+
+                let popularHtml = `
+                    <div class="section-title">
+                        🔥 Popular Games 
+                        <span>Swipe →</span>
+                    </div>
+                    <div class="horizontal-scroll">
+                `;
+                popularList.forEach((game) => {
+                    const gameImg = game.icon || game.image || "🎮";
+                    popularHtml += `
+                        <a href="detail.html?id=${escapeHTML(game.id)}" class="game-card">
+                            <img src="${escapeHTML(gameImg)}" loading="lazy" alt="${escapeHTML(game.name)}">
+                            <h4>${escapeHTML(game.name || "Game")}</h4>
+                            <p>${escapeHTML(game.type || 'Android')}</p>
+                        </a>
+                    `;
+                });
+                popularHtml += `</div>`;
+                document.getElementById("popularGamesContainer").innerHTML = popularHtml;
+
+            } catch (e) {
+                console.error("Error loading sections:", e);
+            }
+        }
+
+        function escapeHTML(value) { 
+            if (value === null || value === undefined) return "";
+            return String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); 
+        }
+
+        initDownloadPage();
+    </script>
+</body>
+</html>

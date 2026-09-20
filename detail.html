@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Loading Game... - AKL Gaming HUB</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="detail.css">
+</head>
+<body>
+<div id="detailApp">
+    <header class="detail-header">
+        <button type="button" class="back-btn" onclick="goBack()" style="flex-shrink: 0;">← Back</button>
+        <button type="button" id="themeToggleBtn" onclick="toggleTheme()" style="background:none; border:none; font-size:20px; cursor:pointer; padding:5px; flex-shrink:0; margin-left: auto;">🌙</button>
+    </header>
+    
+    <main id="detailContent" class="detail-content">
+        <div class="detail-loading">
+            <div class="detail-loading-icon">🎮</div>
+            <div>Loading game...</div>
+        </div>
+    </main>
+
+    <div id="popularGamesContainer" style="margin-top: 10px; padding: 0 10px;"></div>
+
+    <div style="margin: 12px 10px 0; padding: 14px; background: linear-gradient(135deg, #0088cc, #005f99); border-radius: 14px; text-align: center; color: #fff; box-shadow: 0 4px 15px rgba(0,136,204,0.3);">
+        <div style="font-size: 15px; font-weight: 850; margin-bottom: 4px;">📢 Join Our Telegram Channel</div>
+        <div style="font-size: 11px; opacity: 0.9; margin-bottom: 8px;">ဂိမ်းအသစ်တွေနဲ့ Update တွေကို စောစောစီးစီး သိရအောင် Telegram Channel မှာ Join ထားလိုက်ပါ။</div>
+        <a href="https://t.me/s/aklgamesharing" target="_blank" rel="noopener noreferrer" style="display: inline-block; background: #fff; color: #0088cc; padding: 8px 16px; border-radius: 10px; font-size: 12px; font-weight: 850; text-decoration: none; box-shadow: 0 3px 8px rgba(0,0,0,0.15);">🔗 Join Channel Now</a>
+    </div>
+
+    <footer class="detail-footer-box" style="margin-top: 15px; padding: 15px 10px; text-align: center; border-top: 1px solid var(--border-color); font-size: 12px;">
+        <div style="margin-bottom: 6px; font-weight: 500;">© 2026 AKL GAMING HUB</div>
+        <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
+            <a href="privacy.html" style="text-decoration: none;">PRIVACY POLICY</a>
+            <a href="dmca.html" style="text-decoration: none;">DMCA</a>
+            <a href="contact.html" style="text-decoration: none;">CONTACT</a>
+        </div>
+    </footer>
+</div>
+
+<script src="detail.js"></script>
+</body>
+</html>
