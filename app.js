@@ -244,8 +244,8 @@ window.openGameFromCard = function(card) {
 
 function openGame(id) {
     if (!id || String(id).trim() === "") return;
-    // details.html သို့ အချက်အလက်မှန်ကန်စွာ ပို့ပေးရန်
-    window.location.assign("./details.html?id=" + encodeURIComponent(String(id).trim()));
+    // GitHub တွင် detail.html ဖြစ်သောကြောင့် ဖိုင်နာမည်ကို detail.html သို့ အတိအကျ သုံးထားပါသည်
+    window.location.assign("./detail.html?id=" + encodeURIComponent(String(id).trim()));
 }
 
 function renderCategories() {
