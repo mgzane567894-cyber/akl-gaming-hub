@@ -1,8 +1,9 @@
 import logging
-import json
 import os
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
+import psycopg2
+from psycopg2.extras import RealDictCursor
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 
@@ -11,7 +12,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.end_headers()
-        self.wfile.write(b"AKL Gaming Hub Bot is running live!")
+        self.wfile.write(b"AKL Gaming Hub Bot is running live with Supabase!")
 
 def run_dummy_server():
     port = int(os.environ.get("PORT", 8080))
@@ -28,19 +29,37 @@ logging.basicConfig(
 BOT_TOKEN = "8840218731:AAExjF4reevpsWZ7yKPcL5QKYRxfApQW980"
 ADSTERRA_DIRECT_LINK = "https://asiafilm.org/4/c5943dad7af79670ea07ba03b2199713"
 ADMIN_ID = 7122952141
-DB_FILE = "games_db.json"
+
+# Supabase Database URL (သားရီးထည့်ပေးထားတဲ့ Connection String)
+DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://postgres:aungkhainglin12@db.ncjrzuhpdiwrjveogpmt.supabase.co:5432/postgres")
 
 WELCOME_IMAGE = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhCrFvWn7BeKrQtNho2cu_CqR-X0f8BuptBTTIt4fzBbAc-rGTu_dQ1pQLUkMGmsRboaG49JqB4jqQXzUJ-W2obNGmN-EwGVcwFMLQnpSO_ZvLNGhTinvQkc1SWOmFmD-ZgelySMmNMqx0qE3UeYIG6OSt06Xd1gu7Hbpc2lPnXm3jw5_9a0E4W_VNYnj0/s736/45709.jpg"
 
-def load_db():
-    if os.path.exists(DB_FILE):
-        with open(DB_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return {}
+# Database Connection Helper Function
+def get_db_connection():
+    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
 
-def save_db(data):
-    with open(DB_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
+# Supabase မှ ဂိမ်းအချက်အလက်များ အားလုံး ဖတ်ယူရန်
+def load_db():
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM games;")
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        db = {}
+        for row in rows:
+            db[row['key']] = {
+                "name": row['name'],
+                "link": row['link'],
+                "image": row['image']
+            }
+        return db
+    except Exception as e:
+        print(f"Database Load Error: {e}")
+        return {}
 
 # ---------------- HANDLERS ----------------
 
@@ -49,7 +68,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     args = context.args
     db = load_db()
     
-    # 1. /start သက်သက် နှုတ်ဆက်စာမျက်နှာ (ဒေါင်းနည်း မပါဝင်တော့ပါ)
+    # 1. /start သက်သက် နှုတ်ဆက်စာမျက်နှာ (ဒေါင်းနည်း မပါဝင်ပါ)
     if not args:
         welcome_text = (
             f"🔥 **မင်္ဂလာပါ {user.first_name}!** 🔥\n\n"
@@ -149,13 +168,23 @@ async def add_game(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         
     game_key, game_name, game_link, game_image = parts[0].strip(), parts[1].strip(), parts[2].strip(), parts[3].strip()
     
-    db = load_db()
-    db[game_key] = {"name": game_name, "link": game_link, "image": game_image}
-    save_db(db)
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "INSERT INTO games (key, name, link, image) VALUES (%s, %s, %s, %s) ON CONFLICT (key) DO UPDATE SET name = EXCLUDED.name, link = EXCLUDED.link, image = EXCLUDED.image;",
+            (game_key, game_name, game_link, game_image)
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        await update.message.reply_text(f"⚠️ Database ထဲ သိမ်းရာတွင် Error ဖြစ်သွားပါသည်: {e}")
+        return
     
     bot_username = (await context.bot.get_me()).username
     await update.message.reply_text(
-        f"✅ **ဂိမ်းအသစ် အောင်မြင်စွာ ထည့်ပြီးပါပြီကွ!**\n\n"
+        f"✅ **ဂိမ်းအသစ် Supabase သို့ အောင်မြင်စွာ သိမ်းပြီးပါပြီကွ!**\n\n"
         f"🎮 **နာမည်:** {game_name}\n"
         f"🔗 **Share Link:** `https://t.me/{bot_username}?start={game_key}`",
         parse_mode="Markdown"
@@ -172,14 +201,22 @@ async def del_game(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         return
         
     game_key = context.args[0].strip()
-    db = load_db()
     
-    if game_key in db:
-        del db[game_key]
-        save_db(db)
-        await update.message.reply_text(f"🗑️ **ဂိမ်း ({game_key}) ကို အောင်မြင်စွာ ဖျက်လိုက်ပါပြီကွ!**", parse_mode="Markdown")
-    else:
-        await update.message.reply_text(f"⚠️ `{game_key}` ဆိုတဲ့ နာမည်နဲ့ ဂိမ်း Database ထဲမှာ မရှိပါဘူး သားရီး။", parse_mode="Markdown")
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("DELETE FROM games WHERE key = %s;", (game_key,))
+        deleted_rows = cur.rowcount
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        if deleted_rows > 0:
+            await update.message.reply_text(f"🗑️ **ဂိမ်း ({game_key}) ကို Supabase မှ အောင်မြင်စွာ ဖျက်လိုက်ပါပြီကွ!**", parse_mode="Markdown")
+        else:
+            await update.message.reply_text(f"⚠️ `{game_key}` ဆိုတဲ့ နာမည်နဲ့ ဂိမ်း Database ထဲမှာ မရှိပါဘူး သားရီး။", parse_mode="Markdown")
+    except Exception as e:
+        await update.message.reply_text(f"⚠️ Error: {e}")
 
 async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
@@ -215,7 +252,7 @@ def main():
     application.add_handler(CommandHandler("del_game", del_game))
     application.add_handler(CallbackQueryHandler(button_click))
 
-    print("Bot starting successfully...")
+    print("Bot starting successfully with Supabase...")
     application.run_polling()
 
 if __name__ == '__main__':
