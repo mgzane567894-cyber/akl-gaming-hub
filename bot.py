@@ -30,10 +30,8 @@ ADSTERRA_DIRECT_LINK = "https://asiafilm.org/4/c5943dad7af79670ea07ba03b2199713"
 ADMIN_ID = 7122952141
 DB_FILE = "games_db.json"
 
-# ပို့ပေးထားသော Welcome Image URL
 WELCOME_IMAGE = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhCrFvWn7BeKrQtNho2cu_CqR-X0f8BuptBTTIt4fzBbAc-rGTu_dQ1pQLUkMGmsRboaG49JqB4jqQXzUJ-W2obNGmN-EwGVcwFMLQnpSO_ZvLNGhTinvQkc1SWOmFmD-ZgelySMmNMqx0qE3UeYIG6OSt06Xd1gu7Hbpc2lPnXm3jw5_9a0E4W_VNYnj0/s736/45709.jpg"
 
-# Database ဖိုင် Load / Save
 def load_db():
     if os.path.exists(DB_FILE):
         with open(DB_FILE, "r", encoding="utf-8") as f:
@@ -46,43 +44,29 @@ def save_db(data):
 
 # ---------------- HANDLERS ----------------
 
-# /start Command (နှုတ်ဆက်ခြင်း သို့မဟုတ် ဂိမ်းပြသခြင်း)
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user
     args = context.args
     db = load_db()
     
-    # 1. User က /start သက်သက် ရိုက်လိုက်ရင် ပုံလှလှလေးနဲ့ နှုတ်ဆက်မယ်
+    # 1. /start သက်သက် နှုတ်ဆက်စာမျက်နှာ (ဒေါင်းနည်း မပါဝင်တော့ပါ)
     if not args:
         welcome_text = (
             f"🔥 **မင်္ဂလာပါ {user.first_name}!** 🔥\n\n"
-            "🎮 **AKL Gaming Hub File Bot မှ နွေးထွေးစွာ ကြိုဆိုပါတယ် သားရီး!**\n\n"
-            "🔍 **ဂိမ်းများ ရှာဖွေနည်း:**\n"
-            "လိုချင်သော ဂိမ်းနာမည်ကို အောက်ပါအတိုင်း ရိုက်ရှာနိုင်ပါတယ် -\n"
+            "🎮 **AKL Gaming Hub File Bot မှ နွေးထွေးစွာ ကြိုဆိုပါတယ်!**\n\n"
+            "🔍 **ဂိမ်းများ ရှာဖွေလိုပါက အောက်ပါအတိုင်း ရိုက်ရှာနိုင်ပါတယ် -**\n"
             "👉 `/search ဂိမ်းနာမည်`\n"
-            "*(ဥပမာ - `/search gta` သို့မဟုတ် `/search naruto`)*\n\n"
-            "💡 **ဂိမ်းဒေါင်းလုဒ်ဆွဲနည်း:**\n"
-            "၁။ လိုချင်သော ဂိမ်း၏ **'🔓 Unlock Download Link (Ad)'** ခလုတ်ကို နှိပ်ပြီး ကြော်ငြာကို ဝင်ကြည့်ပေးပါ။\n"
-            "၂။ ကြော်ငြာကြည့်ပြီးပါက Bot ထဲသို့ ပြန်ထွက်လာပါ။\n"
-            "၃။ ထို့နောက် **'📥 Game File ရယူရန်'** ခလုတ်ကို နှိပ်၍ ဂိမ်းဒေါင်းလုဒ်လင့်ခ် ရယူနိုင်ပါပြီ သားရီး!"
+            "*(ဥပမာ - `/search simulator` သို့မဟုတ် `/search construction`)*"
         )
         
         try:
-            await update.message.reply_photo(
-                photo=WELCOME_IMAGE,
-                caption=welcome_text,
-                parse_mode="Markdown"
-            )
+            await update.message.reply_photo(photo=WELCOME_IMAGE, caption=welcome_text, parse_mode="Markdown")
         except Exception:
-            await update.message.reply_text(
-                text=welcome_text,
-                parse_mode="Markdown"
-            )
+            await update.message.reply_text(text=welcome_text, parse_mode="Markdown")
         return
 
-    # 2. User က ဂိမ်းလင့်ခ်ကနေ ဝင်လာရင် (ဥပမာ- /start construction)
+    # 2. ဂိမ်းလင့်ခ်မှတဆင့် ဝင်လာသောအခါ
     game_key = args[0]
-    
     if game_key not in db:
         await update.message.reply_text("⚠️ ဒီဂိမ်း မရှိသေးပါ သားရီး။ မကြာမီ တင်ပေးပါမည်။")
         return
@@ -92,7 +76,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     game_link = game_info["link"]
     game_image = game_info["image"]
     
-    # Unlock Status ကို False စထားမည်
     context.user_data['unlocked'] = False
     context.user_data['game_link'] = game_link
     
@@ -100,8 +83,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         f"🔥 **Hey {user.first_name}!** 🔥\n\n"
         f"🎮 **ဂိမ်းအမည်:** {game_name}\n\n"
         "⚡ **ဂိမ်းဖိုင် ရယူရန် အဆင့်များ:**\n"
-        "၁။ အောက်ပါ **'🔓 Unlock Download Link (Ad)'** ကို တစ်ချက်နှိပ်၍ ကြော်ငြာကြည့်ပေးပါ။\n"
-        "၂။ ပြီးလျှင် ဘော့တ်ထဲ ပြန်ထွက်လာပြီး **'📥 Game File ရယူရန်'** ကို နှိပ်ပါ သားရီး!"
+        "၁။ အောက်ပါ **'🔓 Unlock Download Link (Ad)'** ကို တစ်ချက်နှိပ်ပြီး ကြော်ငြာကြည့်ပေးပါ။\n"
+        "၂။ ပြီးလျှင် အဲ့ထဲ ပြန်ထွက်လာပြီး **'📥 Game File ရယူရန်'** ကို နှိပ်ပါ!"
     )
     
     keyboard = [
@@ -119,11 +102,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     except Exception:
         await update.message.reply_text(text=game_text, reply_markup=reply_markup, parse_mode="Markdown")
 
-# 🔍 ဂိမ်းနာမည်ဖြင့် ရှာဖွေပေးသည့် Command
 async def search_game(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not context.args:
         await update.message.reply_text(
-            "⚠️ ရှာချင်တဲ့ ဂိမ်းနာမည် ရိုက်ထည့်ပေးပါ သားရီး။\n\n"
+            "⚠️ ရှာချင်တဲ့ ဂိမ်းနာမည် ရိုက်ထည့်ပေးပါ။\n\n"
             "ဥပမာ- `/search simulator`",
             parse_mode="Markdown"
         )
@@ -138,7 +120,7 @@ async def search_game(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
             results.append((key, data["name"]))
 
     if not results:
-        await update.message.reply_text(f"⚠️ `{query}` နာမည်နဲ့ ပတ်သက်တဲ့ ဂိမ်း ရှာမတွေ့ပါဘူး သားရီး။", parse_mode="Markdown")
+        await update.message.reply_text(f"⚠️ `{query}` နာမည်နဲ့ ပတ်သက်တဲ့ ဂိမ်း ရှာမတွေ့ပါဘူး။", parse_mode="Markdown")
         return
 
     msg = "🔎 **ရှာဖွေတွေ့ရှိသော ဂိမ်းများ:**\n\n"
@@ -153,7 +135,6 @@ async def search_game(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text(msg, reply_markup=reply_markup, parse_mode="Markdown")
 
-# Admin က ဂိမ်းအသစ်ထည့်ရန်
 async def add_game(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user
     if user.id != ADMIN_ID:
@@ -180,7 +161,6 @@ async def add_game(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         parse_mode="Markdown"
     )
 
-# Admin က ဂိမ်းဖျက်ရန်
 async def del_game(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user
     if user.id != ADMIN_ID:
@@ -201,7 +181,6 @@ async def del_game(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     else:
         await update.message.reply_text(f"⚠️ `{game_key}` ဆိုတဲ့ နာမည်နဲ့ ဂိမ်း Database ထဲမှာ မရှိပါဘူး သားရီး။", parse_mode="Markdown")
 
-# Button Click Handle ပြုလုပ်ခြင်း (Ad ကြည့်ပြီးမှ လင့်ခ်ပေးမည့်စနစ်)
 async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
     await query.answer()
@@ -209,23 +188,20 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     if query.data.startswith("get_file_"):
         target_link = context.user_data.get('game_link', "https://t.me/your_channel")
         
-        # ပထမတစ်ခါ နှိပ်ရင် Warning ပြပြီး Unlock ပေးမည်
         if not context.user_data.get('unlocked'):
             context.user_data['unlocked'] = True
             await query.answer(
-                "⚠️ အရင်ဆုံး အပေါ်က '🔓 Unlock Download Link (Ad)' ကို နှိပ်ပြီး ကြော်ငြာကြည့်ပေးပါ သားရီး!",
+                "⚠️ အရင်ဆုံး အပေါ်က '🔓 Unlock Download Link (Ad)' ကို နှိပ်ပြီး ကြော်ငြာကြည့်ပေးပါ!",
                 show_alert=True
             )
         else:
-            # ကြော်ငြာ ဝင်ကြည့်ပြီးမှ အပြင်ပြန်ထွက်လာရင် Download Link အမှန် ပေါ်လာမည်
             await query.edit_message_caption(
                 caption=(
                     "✅ **Unlock အောင်မြင်ပါပြီ သားရီး!**\n\n"
-                    f"🔗 **Download Link:** {target_link}\n\n"
-                    "🚀 အောက်ပါ ခလုတ်ကို နှိပ်၍ ဂိမ်းဖိုင် ဒေါင်းလုဒ်ဆွဲနိုင်ပါပြီ။"
+                    "🚀 အောက်ပါ ခလုတ်ကို နှိပ်ပြီး ဂိမ်းဖိုင် တိုက်ရိုက် ဒေါင်းလုဒ်ဆွဲနိုင်ပါပြီ။"
                 ),
                 reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("🚀 Go To Download Link", url=target_link)]
+                    [InlineKeyboardButton("🚀 Direct Download Link", url=target_link)]
                 ])
             )
 
@@ -239,7 +215,7 @@ def main():
     application.add_handler(CommandHandler("del_game", del_game))
     application.add_handler(CallbackQueryHandler(button_click))
 
-    print("Bot starting successfully with Welcome Screen & Ad Unlock...")
+    print("Bot starting successfully...")
     application.run_polling()
 
 if __name__ == '__main__':
