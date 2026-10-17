@@ -16,8 +16,8 @@ BOT_TOKEN = "8840218731:AAExjF4reevpsWZ7yKPcL5QKYRxfApQW980"
 # မင်းရဲ့ Adsterra Direct Link (Smartlink)
 ADSTERRA_DIRECT_LINK = "https://asiafilm.org/4/c5943dad7af79670ea07ba03b2199713"
 
-# **မင်းရဲ့ Telegram User ID ကို ဒီမှာ ထည့်ပါ (Admin ဖြစ်ရန်)**
-ADMIN_ID = 7122952141  # <--- ဒီနေရာမှာ မင်းရဲ့ Telegram Admin ID အမှန်ကို ထည့်ပါ
+# **မင်းရဲ့ Telegram User ID အမှန်**
+ADMIN_ID = 7122952141
 
 DB_FILE = "games_db.json"
 
@@ -130,6 +130,33 @@ async def add_game(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         parse_mode="Markdown"
     )
 
+# Admin က ဂိမ်းဖျက်ရန် ပုံစံ: /del_game game_key
+async def del_game(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user = update.effective_user
+    
+    # Admin ဟုတ်မဟုတ် စစ်ဆေးခြင်း
+    if user.id != ADMIN_ID:
+        await update.message.reply_text("⛔ ဒီ Command ကို Admin တစ်ဦးတည်းသာ သုံးလို့ရပါတယ် သားရီး။")
+        return
+        
+    if not context.args:
+        await update.message.reply_text(
+            "⚠️ ဖျက်ချင်တဲ့ ဂိမ်းရဲ့ Key ကို ထည့်ပေးပါ သားရီး။\n\n"
+            "`/del_game neverness`",
+            parse_mode="Markdown"
+        )
+        return
+        
+    game_key = context.args[0].strip()
+    db = load_db()
+    
+    if game_key in db:
+        del db[game_key]
+        save_db(db)
+        await update.message.reply_text(f"🗑️ **ဂိမ်း ({game_key}) ကို အောင်မြင်စွာ ဖျက်လိုက်ပါပြီကွ!**", parse_mode="Markdown")
+    else:
+        await update.message.reply_text(f"⚠️ `{game_key}` ဆိုတဲ့ နာမည်နဲ့ ဂိမ်း Database ထဲမှာ မရှိပါဘူး သားရီး။", parse_mode="Markdown")
+
 # Button Click Handle လုပ်ခြင်း
 async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
@@ -160,6 +187,7 @@ def main():
     
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("add_game", add_game))
+    application.add_handler(CommandHandler("del_game", del_game))
     application.add_handler(CallbackQueryHandler(button_click))
 
     print("Bot starting successfully with Database & Admin Panel...")
