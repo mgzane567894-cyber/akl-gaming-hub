@@ -60,7 +60,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             "🔍 **ဂိမ်းများ ရှာဖွေနည်း:**\n"
             "လိုချင်သော ဂိမ်းနာမည်ကို အောက်ပါအတိုင်း ရိုက်ရှာနိုင်ပါတယ် -\n"
             "👉 `/search ဂိမ်းနာမည်`\n"
-            "*(ဥပမာ - `/search simulator` သို့မဟုတ် `/search construction`)*\n\n"
+            "*(ဥပမာ - `/search gta` သို့မဟုတ် `/search naruto`)*\n\n"
             "💡 **ဂိမ်းဒေါင်းလုဒ်ဆွဲနည်း:**\n"
             "၁။ လိုချင်သော ဂိမ်း၏ **'🔓 Unlock Download Link (Ad)'** ခလုတ်ကို နှိပ်ပြီး ကြော်ငြာကို ဝင်ကြည့်ပေးပါ။\n"
             "၂။ ကြော်ငြာကြည့်ပြီးပါက Bot ထဲသို့ ပြန်ထွက်လာပါ။\n"
