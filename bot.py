@@ -17,7 +17,7 @@ BOT_TOKEN = "8840218731:AAExjF4reevpsWZ7yKPcL5QKYRxfApQW980"
 ADSTERRA_DIRECT_LINK = "https://asiafilm.org/4/c5943dad7af79670ea07ba03b2199713"
 
 # **မင်းရဲ့ Telegram User ID ကို ဒီမှာ ထည့်ပါ (Admin ဖြစ်ရန်)**
-ADMIN_ID = 123456789  # <--- ဒီနေရာမှာ မင်းရဲ့ Telegram Admin ID အမှန်ကို ထည့်ပါ
+ADMIN_ID = 7122952141  # <--- ဒီနေရာမှာ မင်းရဲ့ Telegram Admin ID အမှန်ကို ထည့်ပါ
 
 DB_FILE = "games_db.json"
 
