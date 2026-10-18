@@ -116,9 +116,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
+    # ပုံလင့်ခ် မှန်မမှန် စစ်ဆေးပြီး ပို့ဆောင်ခြင်း
     try:
-        await update.message.reply_photo(photo=game_image, caption=game_text, reply_markup=reply_markup, parse_mode="Markdown")
+        if game_image and game_image.startswith("http"):
+            await update.message.reply_photo(photo=game_image, caption=game_text, reply_markup=reply_markup, parse_mode="Markdown")
+        else:
+            raise Exception("Invalid image URL")
     except Exception:
+        # ပုံလင့်ခ် အလုပ်မလုပ်ပါက ပုံမပါဘဲ စာသားနှင့် ခလုတ်ကို ပို့ပေးမည်
         await update.message.reply_text(text=game_text, reply_markup=reply_markup, parse_mode="Markdown")
 
 async def search_game(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
