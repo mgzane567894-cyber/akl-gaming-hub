@@ -5,7 +5,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
+from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, ConversationHandler, filters
 
 # Render Free Web Service အတွက် Fake Server
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
@@ -34,6 +34,9 @@ ADMIN_ID = 7122952141
 DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://postgres.ncjrzuhpdiwrjveogpmt:aungkhainglin12@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres")
 
 WELCOME_IMAGE = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhCrFvWn7BeKrQtNho2cu_CqR-X0f8BuptBTTIt4fzBbAc-rGTu_dQ1pQLUkMGmsRboaG49JqB4jqQXzUJ-W2obNGmN-EwGVcwFMLQnpSO_ZvLNGhTinvQkc1SWOmFmD-ZgelySMmNMqx0qE3UeYIG6OSt06Xd1gu7Hbpc2lPnXm3jw5_9a0E4W_VNYnj0/s736/45709.jpg"
+
+# Conversation States
+GET_NAME, GET_PHOTO, GET_FILE = range(3)
 
 # Database Connection Helper Function
 def get_db_connection():
@@ -68,23 +71,19 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     args = context.args
     db = load_db()
     
-    # 1. /start သက်သက် နှုတ်ဆက်စာမျက်နှာ
     if not args:
         welcome_text = (
             f"🔥 **မင်္ဂလာပါ {user.first_name}!** 🔥\n\n"
             "🎮 **AKL Gaming Hub File Bot မှ နွေးထွေးစွာ ကြိုဆိုပါတယ် သားရီး!**\n\n"
             "🔍 **ဂိမ်းများ ရှာဖွေလိုပါက အောက်ပါအတိုင်း ရိုက်ရှာနိုင်ပါတယ် -**\n"
-            "👉 `/search ဂိမ်းနာမည်`\n"
-            "*(ဥပမာ - `/search simulator` သို့မဟုတ် `/search construction`)*"
+            "👉 `/search ဂိမ်းနာမည်`"
         )
-        
         try:
             await update.message.reply_photo(photo=WELCOME_IMAGE, caption=welcome_text, parse_mode="Markdown")
         except Exception:
             await update.message.reply_text(text=welcome_text, parse_mode="Markdown")
         return
 
-    # 2. ဂိမ်းလင့်ခ်မှတဆင့် ဝင်လာသောအခါ
     game_key = args[0]
     if game_key not in db:
         await update.message.reply_text("⚠️ ဒီဂိမ်း မရှိသေးပါ သားရီး။ မကြာမီ တင်ပေးပါမည်။")
@@ -106,31 +105,22 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     )
     
     keyboard = [
-        [
-            InlineKeyboardButton("🔓 Unlock Download Link (Ad)", url=ADSTERRA_DIRECT_LINK)
-        ],
-        [
-            InlineKeyboardButton("📥 Game File ရယူရန်", callback_data=f"get_file_{game_key}")
-        ]
+        [InlineKeyboardButton("🔓 Unlock Download Link (Ad)", url=ADSTERRA_DIRECT_LINK)],
+        [InlineKeyboardButton("📥 Game File ရယူရန်", callback_data=f"get_file_{game_key}")]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     try:
-        # game_image သည် http လင့်ခ်ဖြစ်စေ၊ Telegram file_id ဖြစ်စေ နှစ်မျိုးစလုံး ပို့နိုင်သည်
         if game_image:
             await update.message.reply_photo(photo=game_image, caption=game_text, reply_markup=reply_markup, parse_mode="Markdown")
         else:
-            raise Exception("No image found")
+            raise Exception()
     except Exception:
         await update.message.reply_text(text=game_text, reply_markup=reply_markup, parse_mode="Markdown")
 
 async def search_game(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not context.args:
-        await update.message.reply_text(
-            "⚠️ ရှာချင်တဲ့ ဂိမ်းနာမည် ရိုက်ထည့်ပေးပါ သားရီး။\n\n"
-            "ဥပမာ- `/search simulator`",
-            parse_mode="Markdown"
-        )
+        await update.message.reply_text("⚠️ ရှာချင်တဲ့ ဂိမ်းနာမည် ရိုက်ထည့်ပေးပါ သားရီး။ ဥပမာ- `/search simulator`", parse_mode="Markdown")
         return
 
     query = " ".join(context.args).lower()
@@ -147,7 +137,6 @@ async def search_game(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
     msg = "🔎 **ရှာဖွေတွေ့ရှိသော ဂိမ်းများ:**\n\n"
     keyboard = []
-    
     bot_username = (await context.bot.get_me()).username
     for key, name in results:
         msg += f"🎮 **{name}**\n"
@@ -157,75 +146,90 @@ async def search_game(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text(msg, reply_markup=reply_markup, parse_mode="Markdown")
 
-async def add_game(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+# --- CONVERSATION HANDLER FOR ADD GAME ---
+
+async def add_game_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     user = update.effective_user
     if user.id != ADMIN_ID:
         await update.message.reply_text("⛔ ဒီ Command ကို Admin တစ်ဦးတည်းသာ သုံးလို့ရပါတယ် သားရီး။")
-        return
+        return ConversationHandler.END
         
-    text = " ".join(context.args)
+    await update.message.reply_text(
+        "🎮 **ဂိမ်းအသစ် စတင်ထည့်သွင်းခြင်း**\n\n"
+        "ကျေးဇူးပြု၍ **Game Key** နဲ့ **ဂိမ်းနာမည်** ကို အောက်ပါပုံစံအတိုင်း ပို့ပေးပါ သားရီး:\n\n"
+        "`dave_the_diver | Dave the Diver`",
+        parse_mode="Markdown"
+    )
+    return GET_NAME
+
+async def receive_name(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    text = update.message.text
     parts = text.split("|")
     if len(parts) < 2:
-        await update.message.reply_text(
-            "⚠️ ပုံစံမမှန်ပါဘူး သားရီး။ ဤကဲ့သို့ ရိုက်ထည့်ပါ:\n\n"
-            "`/add_game dave_the_diver | Dave the Diver`\n\n"
-            "*(မှတ်ချက်။ ။ ဂိမ်းပုံ (Photo) ကို အရင်တင်ပြီး ၎င်းကို Reply ပေးကာ ဂိမ်းဖိုင် (APK) ကိုပါ Reply ပေးပြီး သုံးပါ (သို့) ပုံလင့်ခ်ထည့်လိုက `/add_game key | Name | https://image.url` ဟု သုံးပါ)*",
-            parse_mode="Markdown"
-        )
-        return
+        await update.message.reply_text("⚠️ ပုံစံမမှန်ပါဘူး သားရီး။ `key | Name` ပုံစံအတိုင်း ပြန်လည် ပို့ပေးပါ:")
+        return GET_NAME
         
-    game_key = parts[0].strip()
-    game_name = parts[1].strip()
-    game_image = parts[2].strip() if len(parts) > 2 else None
+    context.user_data['game_key'] = parts[0].strip()
+    context.user_data['game_name'] = parts[1].strip()
     
-    reply_msg = update.message.reply_to_message
-    if not reply_msg:
-        await update.message.reply_text("⚠️ ကျေးဇူးပြု၍ ဂိမ်းဖိုင် သို့မဟုတ် ပုံကို Reply ပေးပြီးမှ `/add_game` ကို သုံးပါ သားရီး။")
-        return
+    await update.message.reply_text(
+        "🖼️ ကျေးဇူးပါ သားရီး။\n\n"
+        "ယခု **ဂိမ်းပုံ (Photo)** တစ်ပုံကို ဓာတ်ပုံပုံစံ (Photo) အနေနဲ့ ပို့ပေးပါခင်ဗျာ။"
+    )
+    return GET_PHOTO
+
+async def receive_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    if not update.message.photo:
+        await update.message.reply_text("⚠️ ကျေးဇူးပြု၍ ပုံ (Photo) ကိုသာ ပို့ပေးပါ သားရီး။")
+        return GET_PHOTO
         
-    file_id = None
-    photo_id = game_image # ပုံလင့်ခ်ပါလာလျှင် ယူမည်
+    # အကြီးဆုံး အရည်အသွေးရှိသော ပုံရဲ့ file_id ကို ယူမည်
+    photo_id = update.message.photo[-1].file_id
+    context.user_data['game_image'] = photo_id
+    
+    await update.message.reply_text(
+        "✅ ပုံ လက်ခံရရှိပါပြီ သားရီး။\n\n"
+        "နောက်ဆုံးအနေနဲ့ **ဂိမ်းဖိုင် (APK / Document)** ကို ပို့ပေးပါခင်ဗျာ။"
+    )
+    return GET_FILE
 
-    # Reply ပေးထားသော မက်ဆေ့ချ်ထဲမှ ဖိုင် သို့မဟုတ် ပုံကို ရှာဖွေခြင်း
-    if reply_msg.document:
-        file_id = reply_msg.document.file_id
-    elif reply_msg.video:
-        file_id = reply_msg.video.file_id
-    elif reply_msg.audio:
-        file_id = reply_msg.audio.file_id
-    elif reply_msg.photo:
-        photo_id = reply_msg.photo[-1].file_id
-
-    # တစ်ခုခု လွဲနေပါက သတိပေးရန်
-    if not file_id:
-        await update.message.reply_text("⚠️ ဂိမ်းဖိုင် (APK) ကို Reply ပေးထားခြင်း မရှိပါ သားရီး။")
-        return
+async def receive_file(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    document = update.message.document or update.message.video or update.message.audio
+    if not document:
+        await update.message.reply_text("⚠️ ကျေးဇူးပြု၍ ဂိမ်းဖိုင် (Document/APK) ကိုသာ ပို့ပေးပါ သားရီး။")
+        return GET_FILE
         
-    if not photo_id:
-        # ပုံလင့်ခ်လည်း မပါ၊ ပုံကိုလည်း Reply မပေးထားလျှင် Welcome ပုံကို ယာယီသုံးမည်
-        photo_id = WELCOME_IMAGE
-
+    file_id = document.file_id
+    game_key = context.user_data.get('game_key')
+    game_name = context.user_data.get('game_name')
+    game_image = context.user_data.get('game_image')
+    
     try:
         conn = get_db_connection()
         cur = conn.cursor()
         cur.execute(
             "INSERT INTO games (key, name, link, image) VALUES (%s, %s, %s, %s) ON CONFLICT (key) DO UPDATE SET name = EXCLUDED.name, link = EXCLUDED.link, image = EXCLUDED.image;",
-            (game_key, game_name, file_id, photo_id)
+            (game_key, game_name, file_id, game_image)
         )
         conn.commit()
         cur.close()
         conn.close()
     except Exception as e:
         await update.message.reply_text(f"⚠️ Database ထဲ သိမ်းရာတွင် Error ဖြစ်သွားပါသည် သားရီး: {e}")
-        return
+        return ConversationHandler.END
     
     bot_username = (await context.bot.get_me()).username
     await update.message.reply_text(
-        f"✅ **ဂိမ်းဖိုင်နှင့်ပုံကို Supabase သို့ အောင်မြင်စွာ သိမ်းပြီးပါပြီကွ!**\n\n"
+        f"✅ **ဂိမ်းအသစ်ကို Supabase သို့ အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီကွ!**\n\n"
         f"🎮 **နာမည်:** {game_name}\n"
         f"🔗 **Share Link:** `https://t.me/{bot_username}?start={game_key}`",
         parse_mode="Markdown"
     )
+    return ConversationHandler.END
+
+async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.message.reply_text("❌ ဂိမ်းထည့်သွင်းမှုကို ဖျက်သိမ်းလိုက်ပါပြီ သားရီး။")
+    return ConversationHandler.END
 
 async def del_game(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user
@@ -286,13 +290,25 @@ def main():
     threading.Thread(target=run_dummy_server, daemon=True).start()
 
     application = Application.builder().token(BOT_TOKEN).build()
+    
+    # Conversation Handler for adding games step-by-step
+    conv_handler = ConversationHandler(
+        entry_points=[CommandHandler("add_game", add_game_start)],
+        states={
+            GET_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_name)],
+            GET_PHOTO: [MessageHandler(filters.PHOTO, receive_photo)],
+            GET_FILE: [MessageHandler(filters.Document.ALL | filters.VIDEO | filters.AUDIO, receive_file)],
+        },
+        fallbacks=[CommandHandler("cancel", cancel)],
+    )
+
+    application.add_handler(conv_handler)
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("search", search_game))
-    application.add_handler(CommandHandler("add_game", add_game))
     application.add_handler(CommandHandler("del_game", del_game))
     application.add_handler(CallbackQueryHandler(button_click))
 
-    print("Bot starting successfully with Supabase pooler & File ID support...")
+    print("Bot starting successfully with Step-by-Step Conversation Handler & Supabase...")
     application.run_polling()
 
 if __name__ == '__main__':
