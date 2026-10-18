@@ -95,7 +95,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     game_image = game_info["image"]
     
     context.user_data['unlocked'] = False
-    context.user_data['game_key'] = game_key  # Callback အတွက် သိမ်းထားမည်
+    context.user_data['game_key'] = game_key
     
     game_text = (
         f"🔥 **Hey {user.first_name}!** 🔥\n\n"
@@ -116,10 +116,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     try:
-        if game_image and game_image.startswith("http"):
+        # game_image သည် http လင့်ခ်ဖြစ်စေ၊ Telegram file_id ဖြစ်စေ နှစ်မျိုးစလုံး ပို့နိုင်သည်
+        if game_image:
             await update.message.reply_photo(photo=game_image, caption=game_text, reply_markup=reply_markup, parse_mode="Markdown")
         else:
-            raise Exception("Invalid image URL")
+            raise Exception("No image found")
     except Exception:
         await update.message.reply_text(text=game_text, reply_markup=reply_markup, parse_mode="Markdown")
 
@@ -164,26 +165,52 @@ async def add_game(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         
     text = " ".join(context.args)
     parts = text.split("|")
-    if len(parts) < 3:
-        await update.message.reply_text("⚠️ ပုံစံမမှန်ပါဘူး သားရီး။ ဤကဲ့သို့ ရိုက်ထည့်ပါ:\n\n`/add_game dave_the_diver | Dave the Diver | https://image.url`\n*(မှတ်ချက်။ ။ ဂိမ်းဖိုင်ကို Reply ပေးပြီးမှ ဤကွန်မန်းကို သုံးပါ)*", parse_mode="Markdown")
+    if len(parts) < 2:
+        await update.message.reply_text(
+            "⚠️ ပုံစံမမှန်ပါဘူး သားရီး။ ဤကဲ့သို့ ရိုက်ထည့်ပါ:\n\n"
+            "`/add_game dave_the_diver | Dave the Diver`\n\n"
+            "*(မှတ်ချက်။ ။ ဂိမ်းပုံ (Photo) ကို အရင်တင်ပြီး ၎င်းကို Reply ပေးကာ ဂိမ်းဖိုင် (APK) ကိုပါ Reply ပေးပြီး သုံးပါ (သို့) ပုံလင့်ခ်ထည့်လိုက `/add_game key | Name | https://image.url` ဟု သုံးပါ)*",
+            parse_mode="Markdown"
+        )
         return
         
-    game_key, game_name, game_image = parts[0].strip(), parts[1].strip(), parts[2].strip()
+    game_key = parts[0].strip()
+    game_name = parts[1].strip()
+    game_image = parts[2].strip() if len(parts) > 2 else None
     
-    # Reply ပေးထားသော မက်ဆေ့ချ်ထဲမှ ဖိုင် (Document သို့မဟုတ် Video) ကို ရယူခြင်း
     reply_msg = update.message.reply_to_message
-    if not reply_msg or not (reply_msg.document or reply_msg.video or reply_msg.audio):
-        await update.message.reply_text("⚠️ ကျေးဇူးပြု၍ ဂိမ်းဖိုင် (APK) ကို လက်ညှိုးထိုး Reply ပေးပြီးမှ `/add_game` ကို သုံးပါ သားရီး။")
+    if not reply_msg:
+        await update.message.reply_text("⚠️ ကျေးဇူးပြု၍ ဂိမ်းဖိုင် သို့မဟုတ် ပုံကို Reply ပေးပြီးမှ `/add_game` ကို သုံးပါ သားရီး။")
         return
         
-    file_id = reply_msg.document.file_id if reply_msg.document else (reply_msg.video.file_id if reply_msg.video else reply_msg.audio.file_id)
-    
+    file_id = None
+    photo_id = game_image # ပုံလင့်ခ်ပါလာလျှင် ယူမည်
+
+    # Reply ပေးထားသော မက်ဆေ့ချ်ထဲမှ ဖိုင် သို့မဟုတ် ပုံကို ရှာဖွေခြင်း
+    if reply_msg.document:
+        file_id = reply_msg.document.file_id
+    elif reply_msg.video:
+        file_id = reply_msg.video.file_id
+    elif reply_msg.audio:
+        file_id = reply_msg.audio.file_id
+    elif reply_msg.photo:
+        photo_id = reply_msg.photo[-1].file_id
+
+    # တစ်ခုခု လွဲနေပါက သတိပေးရန်
+    if not file_id:
+        await update.message.reply_text("⚠️ ဂိမ်းဖိုင် (APK) ကို Reply ပေးထားခြင်း မရှိပါ သားရီး။")
+        return
+        
+    if not photo_id:
+        # ပုံလင့်ခ်လည်း မပါ၊ ပုံကိုလည်း Reply မပေးထားလျှင် Welcome ပုံကို ယာယီသုံးမည်
+        photo_id = WELCOME_IMAGE
+
     try:
         conn = get_db_connection()
         cur = conn.cursor()
         cur.execute(
             "INSERT INTO games (key, name, link, image) VALUES (%s, %s, %s, %s) ON CONFLICT (key) DO UPDATE SET name = EXCLUDED.name, link = EXCLUDED.link, image = EXCLUDED.image;",
-            (game_key, game_name, file_id, game_image)
+            (game_key, game_name, file_id, photo_id)
         )
         conn.commit()
         cur.close()
@@ -194,7 +221,7 @@ async def add_game(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     
     bot_username = (await context.bot.get_me()).username
     await update.message.reply_text(
-        f"✅ **ဂိမ်းဖိုင်နှင့်တကွ Supabase သို့ အောင်မြင်စွာ သိမ်းပြီးပါပြီကွ!**\n\n"
+        f"✅ **ဂိမ်းဖိုင်နှင့်ပုံကို Supabase သို့ အောင်မြင်စွာ သိမ်းပြီးပါပြီကွ!**\n\n"
         f"🎮 **နာမည်:** {game_name}\n"
         f"🔗 **Share Link:** `https://t.me/{bot_username}?start={game_key}`",
         parse_mode="Markdown"
@@ -247,7 +274,6 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         else:
             await query.answer()
             try:
-                # ฐานข้อมูล ထဲက သိမ်းထားတဲ့ Telegram File ID ဖြင့် ဖိုင်ကို တိုက်ရိုက်ပို့ပေးမည်
                 await context.bot.send_document(
                     chat_id=query.message.chat_id,
                     document=target_file_id,
