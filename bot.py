@@ -30,8 +30,8 @@ BOT_TOKEN = "8840218731:AAExjF4reevpsWZ7yKPcL5QKYRxfApQW980"
 ADSTERRA_DIRECT_LINK = "https://asiafilm.org/4/c5943dad7af79670ea07ba03b2199713"
 ADMIN_ID = 7122952141
 
-# Supabase Database URL (သားရီးထည့်ပေးထားတဲ့ Connection String)
-DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://postgres:aungkhainglin12@db.ncjrzuhpdiwrjveogpmt.supabase.co:5432/postgres")
+# Supabase Database URL (တစ်ကြောင်းတည်း အမှန်ပြင်ထားသည်)
+DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://postgres.ncjrzuhpdiwrjveogpmt:aungkhainglin12@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres")
 
 WELCOME_IMAGE = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhCrFvWn7BeKrQtNho2cu_CqR-X0f8BuptBTTIt4fzBbAc-rGTu_dQ1pQLUkMGmsRboaG49JqB4jqQXzUJ-W2obNGmN-EwGVcwFMLQnpSO_ZvLNGhTinvQkc1SWOmFmD-ZgelySMmNMqx0qE3UeYIG6OSt06Xd1gu7Hbpc2lPnXm3jw5_9a0E4W_VNYnj0/s736/45709.jpg"
 
@@ -68,11 +68,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     args = context.args
     db = load_db()
     
-    # 1. /start သက်သက် နှုတ်ဆက်စာမျက်နှာ (ဒေါင်းနည်း မပါဝင်ပါ)
+    # 1. /start သက်သက် နှုတ်ဆက်စာမျက်နှာ
     if not args:
         welcome_text = (
             f"🔥 **မင်္ဂလာပါ {user.first_name}!** 🔥\n\n"
-            "🎮 **AKL Gaming Hub File Bot မှ နွေးထွေးစွာ ကြိုဆိုပါတယ်!**\n\n"
+            "🎮 **AKL Gaming Hub File Bot မှ နွေးထွေးစွာ ကြိုဆိုပါတယ် သားရီး!**\n\n"
             "🔍 **ဂိမ်းများ ရှာဖွေလိုပါက အောက်ပါအတိုင်း ရိုက်ရှာနိုင်ပါတယ် -**\n"
             "👉 `/search ဂိမ်းနာမည်`\n"
             "*(ဥပမာ - `/search simulator` သို့မဟုတ် `/search construction`)*"
@@ -103,7 +103,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         f"🎮 **ဂိမ်းအမည်:** {game_name}\n\n"
         "⚡ **ဂိမ်းဖိုင် ရယူရန် အဆင့်များ:**\n"
         "၁။ အောက်ပါ **'🔓 Unlock Download Link (Ad)'** ကို တစ်ချက်နှိပ်ပြီး ကြော်ငြာကြည့်ပေးပါ။\n"
-        "၂။ ပြီးလျှင် အဲ့ထဲ ပြန်ထွက်လာပြီး **'📥 Game File ရယူရန်'** ကို နှိပ်ပါ!"
+        "၂။ ပြီးလျှင် အဲ့ထဲ ပြန်ထွက်လာပြီး **'📥 Game File ရယူရန်'** ကို နှိပ်ပါ သားရီး!"
     )
     
     keyboard = [
@@ -124,7 +124,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def search_game(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not context.args:
         await update.message.reply_text(
-            "⚠️ ရှာချင်တဲ့ ဂိမ်းနာမည် ရိုက်ထည့်ပေးပါ။\n\n"
+            "⚠️ ရှာချင်တဲ့ ဂိမ်းနာမည် ရိုက်ထည့်ပေးပါ သားရီး။\n\n"
             "ဥပမာ- `/search simulator`",
             parse_mode="Markdown"
         )
@@ -139,7 +139,7 @@ async def search_game(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
             results.append((key, data["name"]))
 
     if not results:
-        await update.message.reply_text(f"⚠️ `{query}` နာမည်နဲ့ ပတ်သက်တဲ့ ဂိမ်း ရှာမတွေ့ပါဘူး။", parse_mode="Markdown")
+        await update.message.reply_text(f"⚠️ `{query}` နာမည်နဲ့ ပတ်သက်တဲ့ ဂိမ်း ရှာမတွေ့ပါဘူး သားရီး။", parse_mode="Markdown")
         return
 
     msg = "🔎 **ရှာဖွေတွေ့ရှိသော ဂိမ်းများ:**\n\n"
@@ -179,7 +179,7 @@ async def add_game(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         cur.close()
         conn.close()
     except Exception as e:
-        await update.message.reply_text(f"⚠️ Database ထဲ သိမ်းရာတွင် Error ဖြစ်သွားပါသည်: {e}")
+        await update.message.reply_text(f"⚠️ Database ထဲ သိမ်းရာတွင် Error ဖြစ်သွားပါသည် သားရီး: {e}")
         return
     
     bot_username = (await context.bot.get_me()).username
@@ -228,7 +228,7 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         if not context.user_data.get('unlocked'):
             context.user_data['unlocked'] = True
             await query.answer(
-                "⚠️ အရင်ဆုံး အပေါ်က '🔓 Unlock Download Link (Ad)' ကို နှိပ်ပြီး ကြော်ငြာကြည့်ပေးပါ!",
+                "⚠️ အရင်ဆုံး အပေါ်က '🔓 Unlock Download Link (Ad)' ကို နှိပ်ပြီး ကြော်ငြာကြည့်ပေးပါ သားရီး!",
                 show_alert=True
             )
         else:
@@ -252,7 +252,7 @@ def main():
     application.add_handler(CommandHandler("del_game", del_game))
     application.add_handler(CallbackQueryHandler(button_click))
 
-    print("Bot starting successfully with Supabase...")
+    print("Bot starting successfully with Supabase pooler...")
     application.run_polling()
 
 if __name__ == '__main__':
