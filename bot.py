@@ -30,7 +30,7 @@ BOT_TOKEN = "8840218731:AAExjF4reevpsWZ7yKPcL5QKYRxfApQW980"
 ADSTERRA_DIRECT_LINK = "https://asiafilm.org/4/c5943dad7af79670ea07ba03b2199713"
 ADMIN_ID = 7122952141
 
-# Supabase Database URL (တစ်ကြောင်းတည်း အမှန်ပြင်ထားသည်)
+# Supabase Database URL (Transaction Pooler - IPv4 Compatible)
 DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://postgres.ncjrzuhpdiwrjveogpmt:aungkhainglin12@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres")
 
 WELCOME_IMAGE = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhCrFvWn7BeKrQtNho2cu_CqR-X0f8BuptBTTIt4fzBbAc-rGTu_dQ1pQLUkMGmsRboaG49JqB4jqQXzUJ-W2obNGmN-EwGVcwFMLQnpSO_ZvLNGhTinvQkc1SWOmFmD-ZgelySMmNMqx0qE3UeYIG6OSt06Xd1gu7Hbpc2lPnXm3jw5_9a0E4W_VNYnj0/s736/45709.jpg"
@@ -220,27 +220,35 @@ async def del_game(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
-    await query.answer()
     
     if query.data.startswith("get_file_"):
         target_link = context.user_data.get('game_link', "https://t.me/your_channel")
         
-        if not context.user_data.get('unlocked'):
+        if not context.user_data.get('unlocked', False):
             context.user_data['unlocked'] = True
             await query.answer(
-                "⚠️ အရင်ဆုံး အပေါ်က '🔓 Unlock Download Link (Ad)' ကို နှိပ်ပြီး ကြော်ငြာကြည့်ပေးပါ သားရီး!",
+                text="⚠️ အရင်ဆုံး အပေါ်က '🔓 Unlock Download Link (Ad)' ကို နှိပ်ပြီး ကြော်ငြာကြည့်ပေးပါ သားရီး!",
                 show_alert=True
             )
         else:
-            await query.edit_message_caption(
-                caption=(
-                    "✅ **Unlock အောင်မြင်ပါပြီ သားရီး!**\n\n"
-                    "🚀 အောက်ပါ ခလုတ်ကို နှိပ်ပြီး ဂိမ်းဖိုင် တိုက်ရိုက် ဒေါင်းလုဒ်ဆွဲနိုင်ပါပြီ။"
-                ),
-                reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("🚀 Direct Download Link", url=target_link)]
-                ])
-            )
+            await query.answer()
+            try:
+                await query.edit_message_caption(
+                    caption=(
+                        "✅ **Unlock အောင်မြင်ပါပြီ သားရီး!**\n\n"
+                        "🚀 အောက်ပါ ခလုတ်ကို နှိပ်ပြီး ဂိမ်းဖိုင် တိုက်ရိုက် ဒေါင်းလုဒ်ဆွဲနိုင်ပါပြီ။"
+                    ),
+                    reply_markup=InlineKeyboardMarkup([
+                        [InlineKeyboardButton("🚀 Direct Download Link", url=target_link)]
+                    ])
+                )
+            except Exception:
+                await query.message.reply_text(
+                    text="✅ **Unlock အောင်မြင်ပါပြီ သားရီး!**\n🚀 အောက်ပါ ခလုတ်ကို နှိပ်ပြီး ဂိမ်းဖိုင် ဒေါင်းပါ။",
+                    reply_markup=InlineKeyboardMarkup([
+                        [InlineKeyboardButton("🚀 Direct Download Link", url=target_link)]
+                    ])
+                )
 
 def main():
     threading.Thread(target=run_dummy_server, daemon=True).start()
