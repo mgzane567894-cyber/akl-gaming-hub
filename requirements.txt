@@ -1,6 +1,5 @@
 python-telegram-bot
 supabase
 psycopg2-binary
-firebase-admin
 
 
