@@ -27,7 +27,7 @@ logging.basicConfig(
 
 # ---------------- CONFIGURATION ----------------
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "8840218731:AAExjF4reevpsWZ7yKPcL5QKYRxfApQW980")
-ADSTERRA_DIRECT_LINK = "https://asiafilm.org/4/c5943dad7af79670ea07ba03b2199713"
+ADSTERRA_DIRECT_LINK = "https://araplhn.org/4/a5cf2ac42fc3b28070b87afb456402e7"
 ADMIN_ID = 7122952141
 
 # Supabase Database URL (Transaction Pooler - IPv4 Compatible)
