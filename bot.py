@@ -7,12 +7,16 @@ from psycopg2.extras import RealDictCursor
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, ConversationHandler, filters
 
-# Render Free Web Service အတွက် Fake Server
+# Render Free Web Service အတွက် Fake Server (GET နှင့် HEAD Request နှစ်ခုလုံးကို ဖြေကြားပေးရန်)
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.end_headers()
         self.wfile.write(b"AKL Gaming Hub Bot is running live with Supabase!")
+
+    def do_HEAD(self):
+        self.send_response(200)
+        self.end_headers()
 
 def run_dummy_server():
     port = int(os.environ.get("PORT", 8080))
