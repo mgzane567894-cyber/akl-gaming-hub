@@ -30,9 +30,8 @@ BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "8840218731:AAExjF4reevpsWZ7yKP
 ADSTERRA_DIRECT_LINK = "https://araplhn.org/4/a5cf2ac42fc3b28070b87afb456402e7"
 ADMIN_ID = 7122952141
 
-# 🎬 ဒီနေရာမှာ ဂိမ်းတိုင်းအတွက် အမြဲသုံးမယ့် ဒေါင်းနည်းဗီဒီယိုရဲ့ Telegram File ID ကို ထည့်ပါ
-# (သို့မဟုတ် Bot ထဲကို ဗီဒီယိုပို့ပြီး ရလာတဲ့ file_id ကို ဒီမှာ လာကပ်ထည့်နိုင်ပါတယ်)
-GLOBAL_GUIDE_VIDEO_ID = "BAACAgUAAxkBAAI..." # <-- သင်အသုံးပြုလိုသော ဗီဒီယို၏ file_id ကို ဒီမှာ ထည့်ပါ
+# 🎬 ဂိမ်းတိုင်းအတွက် အမြဲသုံးမယ့် ဒေါင်းနည်းဗီဒီယို၏ Telegram File ID
+GLOBAL_GUIDE_VIDEO_ID = "BAACAgUAAxkBAAJy6mr9YhJVn18OWYLErD3joufJvrHhAAJKIwACFfpBV43SJA0nMBBXPQQ"
 
 # Supabase Database URL (Transaction Pooler - IPv4 Compatible)
 DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://postgres.ncjrzuhpdiwrjveogpmt:aungkhainglin12@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres")
@@ -103,7 +102,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     context.user_data['unlocked'] = False
     context.user_data['game_key'] = game_key
     
-    # စာသားများကို HTML Tag အမှားကင်းစင်စွာ သပ်ရပ်စွာ ပြင်ဆင်ထားသည်
     game_text = (
         f"🔥 **Hey {user.first_name}!** 🔥\n\n"
         f"🎮 **ဂိမ်းအမည်:** {game_name}\n\n"
@@ -127,7 +125,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         else:
             await update.message.reply_text(text=game_text, reply_markup=reply_markup, parse_mode="Markdown")
             
-        # ၂။ သတ်မှတ်ထားသော ဗီဒီယို တစ်ပုဒ်တည်းကိုသာ ဂိမ်းတိုင်းအတွက် အော်တို တွဲ၍ ပို့ပေးမည်
+        # ၂။ သတ်မှတ်ထားသော ဗီဒီယို တစ်ပုဒ်တည်းကို ဂိမ်းတိုင်းအတွက် အော်တို ပို့ပေးမည်
         if GLOBAL_GUIDE_VIDEO_ID:
             await update.message.reply_video(video=GLOBAL_GUIDE_VIDEO_ID, caption=f"🎬 **ဂိမ်းဒေါင်းလုဒ်ဆွဲနည်း ဗီဒီယိုလမ်းညွှန်**", parse_mode="Markdown")
             
@@ -161,18 +159,6 @@ async def search_game(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text(msg, reply_markup=reply_markup, parse_mode="Markdown")
-
-# --- ADMIN HELPER COMMAND TO GET VIDEO FILE ID ---
-async def get_video_id(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    user = update.effective_user
-    if user.id != ADMIN_ID:
-        return
-    
-    if update.message.reply_to_message and update.message.reply_to_message.video:
-        vid_id = update.message.reply_to_message.video.file_id
-        await update.message.reply_text(f"📋 **Video File ID:**\n`{vid_id}`", parse_mode="Markdown")
-    else:
-        await update.message.reply_text("⚠️ ကျေးဇူးပြု၍ ဗီဒီယိုဖိုင်ကို Reply လုပ်ပြီး `/get_id` ဟု ရိုက်ပါ။")
 
 # --- CONVERSATION HANDLER FOR ADD GAME ---
 
@@ -449,7 +435,6 @@ def main():
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("search", search_game))
     application.add_handler(CommandHandler("del_game", del_game))
-    application.add_handler(CommandHandler("get_id", get_video_id))
     application.add_handler(CallbackQueryHandler(button_click))
 
     print("Bot starting successfully with Global Video Guide...")
