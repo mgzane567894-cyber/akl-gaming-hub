@@ -35,8 +35,9 @@ DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://postgres.ncjrzuhpdiw
 
 WELCOME_IMAGE = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhCrFvWn7BeKrQtNho2cu_CqR-X0f8BuptBTTIt4fzBbAc-rGTu_dQ1pQLUkMGmsRboaG49JqB4jqQXzUJ-W2obNGmN-EwGVcwFMLQnpSO_ZvLNGhTinvQkc1SWOmFmD-ZgelySMmNMqx0qE3UeYIG6OSt06Xd1gu7Hbpc2lPnXm3jw5_9a0E4W_VNYnj0/s736/45709.jpg"
 
-# Conversation States for Adding Game
+# Conversation States for Adding Game & Video
 GET_NAME, GET_PHOTO, GET_APK_CHOICE, GET_APK_CONTENT, GET_OBB_CHOICE, GET_OBB_CONTENT = range(6)
+GET_VIDEO_KEY, GET_VIDEO_CONTENT = range(2, 4)
 
 # Database Connection Helper Function
 def get_db_connection():
@@ -60,7 +61,8 @@ def load_db():
                 "apk_type": row.get('apk_type'),
                 "apk_value": row.get('apk_value'),
                 "obb_type": row.get('obb_type'),
-                "obb_value": row.get('obb_value')
+                "obb_value": row.get('obb_value'),
+                "video_file_id": row.get('video_file_id')
             }
         return db
     except Exception as e:
@@ -74,7 +76,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     args = context.args
     db = load_db()
     
-    # အကယ်၍ Parameter (Game Key) ပါမလာရင် သာမန် Welcome စာသားပြမည်
     if not args:
         welcome_text = (
             f"🔥 **မင်္ဂလာပါ {user.first_name}!** 🔥\n\n"
@@ -88,7 +89,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             await update.message.reply_text(text=welcome_text, parse_mode="Markdown")
         return
 
-    # Deep Link မှတဆင့် Game Key ဖြင့် ရောက်လာသည့်အခါ
     game_key = args[0]
     if game_key not in db:
         await update.message.reply_text("⚠️ ဒီဂိမ်း မရှိသေးပါ။ မကြာမီ တင်ပေးပါမည်။")
@@ -97,18 +97,19 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     game_info = db[game_key]
     game_name = game_info["name"]
     game_image = game_info["image"]
+    video_file_id = game_info.get("video_file_id")
     
     context.user_data['unlocked'] = False
     context.user_data['game_key'] = game_key
     
-    # ဂိမ်းဒေါင်းနည်း (Guide) နှင့် လမ်းညွှန်ချက်များ ထည့်သွင်းထားသော စာသား
+    # စာသားများကို သပ်ရပ်စွာ ပြင်ဆင်ထားသည် (HTML Tag အမှားများ မပါတော့ပါ)
     game_text = (
         f"🔥 **Hey {user.first_name}!** 🔥\n\n"
         f"🎮 **ဂိမ်းအမည်:** {game_name}\n\n"
         "📜 **📥 ဂိမ်းဒေါင်းလုဒ်လုပ်နည်းနှင့် ထည့်သွင်းနည်းလမ်းညွှန်:**\n"
-        "၁။ အောက်ပါ **'🔓 Unlock Download Link (Ad)'** ကို နှိပ်ပြီး Adsterra ကြော်ငြာကို တစ်ချက်ကြည့်ပေးပါ။\n"
+        "၁။ အောက်ပါ **'🔓 Unlock Download Link (Ad)'** ကို နှိပ်ပြီး ကြော်ငြာကို တစ်ချက်ကြည့်ပေးပါ။\n"
         "၂။ ကြော်ငြာကြည့်ပြီးပါက Bot ဆီသို့ ပြန်လာပြီး **'📥 Download Links ရယူရန်'** ခလုတ်ကို နှိပ်ပါ။\n"
-        "၃။ ထွက်လာမည့် Direct Link (သို့) Telegram File ကို Download ဆွဲပြီး ဖုန်းထဲတွင် ထည့်သွင်းဆော့ကစားနိုင်ပါပြီ[span_2](start_span)[span_2](end_span)!\n\n"
+        "၃။ ထွက်လာမည့် Direct Link သို့မဟုတ် Telegram File ကို Download ဆွဲပြီး ဖုန်းထဲတွင် ထည့်သွင်းဆော့ကစားနိုင်ပါပြီ။\n\n"
         "⚡ **အောက်ပါ ခလုတ်ကို အရင်နှိပ်ပေးပါ 👇**"
     )
     
@@ -119,12 +120,18 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     try:
+        # ပထမဦးစွာ ဂိမ်းပုံနှင့် စာသားကို ပို့မည်
         if game_image:
             await update.message.reply_photo(photo=game_image, caption=game_text, reply_markup=reply_markup, parse_mode="Markdown")
         else:
-            raise Exception()
-    except Exception:
-        await update.message.reply_text(text=game_text, reply_markup=reply_markup, parse_mode="Markdown")
+            await update.message.reply_text(text=game_text, reply_markup=reply_markup, parse_mode="Markdown")
+            
+        # အကယ်၍ အဆိုပါဂိမ်းတွင် ဒေါင်းနည်းဗီဒီယို (Video) ထည့်ထားပါက တွဲ၍ ပို့ပေးမည်
+        if video_file_id:
+            await update.message.reply_video(video=video_file_id, caption=f"🎬 **{game_name} - ဒေါင်းလုပ်ဆွဲနည်း ဗီဒီယိုလမ်းညွှန်**", parse_mode="Markdown")
+            
+    except Exception as e:
+        print(f"Start command error: {e}")
 
 async def search_game(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not context.args:
@@ -153,6 +160,65 @@ async def search_game(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text(msg, reply_markup=reply_markup, parse_mode="Markdown")
+
+# --- ADD VIDEO COMMAND HANDLER ---
+
+async def add_video_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    user = update.effective_user
+    if user.id != ADMIN_ID:
+        await update.message.reply_text("⛔ ဒီ Command ကို Admin တစ်ဦးတည်းသာ သုံးလို့ရပါတယ်။")
+        return ConversationHandler.END
+        
+    await update.message.reply_text(
+        "🎬 **ဂိမ်းဒေါင်းနည်း ဗီဒီယို ထည့်သွင်းခြင်း**\n\n"
+        "ကျေးဇူးပြု၍ ဗီဒီယို ထည့်လိုသော **Game Key** ကို ပို့ပေးပါ (ဥပမာ- `breachnight`):",
+        parse_mode="Markdown"
+    )
+    return GET_VIDEO_KEY
+
+async def receive_video_key(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    text = update.message.text.strip()
+    context.user_data['video_game_key'] = text
+    
+    await update.message.reply_text(
+        f"📥 ကျေးဇူးတင်ပါတယ်။ ဂိမ်း Key: `{text}` အတွက် **ဗီဒီယိုဖိုင် (Video File)** ကို တိုက်ရိုက် တင်ပေးပါ (သို့မဟုတ် Video Note ပို့ပေးပါ):",
+        parse_mode="Markdown"
+    )
+    return GET_VIDEO_CONTENT
+
+async def receive_video_content(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    video = update.message.video or update.message.document
+    if not video:
+        await update.message.reply_text("⚠️ ကျေးဇူးပြု၍ ဗီဒီယိုဖိုင် (Video File) ကိုသာ ပို့ပေးပါ။")
+        return GET_VIDEO_CONTENT
+        
+    video_file_id = video.file_id
+    game_key = context.user_data.get('video_game_key')
+    
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Database ထဲတွင် video_file_id ကော်လံ ရှိမရှိ စစ်ဆေးပြီး ထည့်သွင်းခြင်း
+        cur.execute(
+            """
+            UPDATE games SET video_file_id = %s WHERE key = %s;
+            """,
+            (video_file_id, game_key)
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        await update.message.reply_text(
+            f"✅ **အောင်မြင်ပါပြီ သားရီး!**\n\n"
+            f"🎮 **Game Key:** `{game_key}` အတွက် ဒေါင်းနည်းဗီဒီယိုကို Supabase သို့ အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ။",
+            parse_mode="Markdown"
+        )
+    except Exception as e:
+        await update.message.reply_text(f"⚠️ ဗီဒီယို သိမ်းဆည်းရာတွင် Error ဖြစ်သွားသည်: {e}")
+        
+    return ConversationHandler.END
 
 # --- CONVERSATION HANDLER FOR ADD GAME ---
 
@@ -231,7 +297,6 @@ async def receive_apk_content(update: Update, context: ContextTypes.DEFAULT_TYPE
             return GET_APK_CONTENT
         context.user_data['apk_value'] = update.message.text.strip()
         
-    # OBB / Data Option
     keyboard = [
         [InlineKeyboardButton("📁 Telegram File ဖြင့် OBB တင်မည်", callback_data="obb_type_file")],
         [InlineKeyboardButton("🔗 Direct Link ဖြင့် OBB ထည့်မည်", callback_data="obb_type_link")],
@@ -375,7 +440,6 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         else:
             await query.answer()
             try:
-                # အချက်အလက်များ ထုတ်ပေးရန် Keyboard တည်ဆောက်ခြင်း
                 keyboard = []
                 
                 apk_type = game_info.get("apk_type")
@@ -383,21 +447,17 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
                 obb_type = game_info.get("obb_type")
                 obb_value = game_info.get("obb_value")
                 
-                # 1. APK Button Handling
                 if apk_type == 'link':
                     keyboard.append([InlineKeyboardButton("📥 Download APK (Direct Link)", url=apk_value)])
                 
-                # 2. OBB Button Handling
                 if obb_type == 'link' and obb_value:
                     keyboard.append([InlineKeyboardButton("📦 Download OBB / Data (Direct Link)", url=obb_value)])
                 
                 reply_markup = InlineKeyboardMarkup(keyboard) if keyboard else None
                 
-                # Text info message
                 info_msg = f"✅ **Unlock အောင်မြင်ပါပြီ!**\n🚀 **{game_name}** ဖိုင်များကို အောက်ပါအတိုင်း ရယူနိုင်ပါပြီ။"
                 await context.bot.send_message(chat_id=query.message.chat_id, text=info_msg, reply_markup=reply_markup, parse_mode="Markdown")
                 
-                # Telegram File များကို ပို့ပေးခြင်း (APK သို့မဟုတ် OBB File ဖြစ်နေလျှင်)
                 if apk_type == 'file' and apk_value:
                     await context.bot.send_document(chat_id=query.message.chat_id, document=apk_value, caption=f"📱 **{game_name} (APK File)**")
                 
@@ -412,6 +472,7 @@ def main():
 
     application = Application.builder().token(BOT_TOKEN).build()
     
+    # 1. Add Game Conversation Handler
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("add_game", add_game_start)],
         states={
@@ -431,13 +492,24 @@ def main():
         fallbacks=[CommandHandler("cancel", cancel)],
     )
 
+    # 2. Add Video Conversation Handler
+    video_conv_handler = ConversationHandler(
+        entry_points=[CommandHandler("add_video", add_video_start)],
+        states={
+            GET_VIDEO_KEY: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_video_key)],
+            GET_VIDEO_CONTENT: [MessageHandler(filters.VIDEO | filters.Document.ALL, receive_video_content)],
+        },
+        fallbacks=[CommandHandler("cancel", cancel)],
+    )
+
     application.add_handler(conv_handler)
+    application.add_handler(video_conv_handler)
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("search", search_game))
     application.add_handler(CommandHandler("del_game", del_game))
     application.add_handler(CallbackQueryHandler(button_click))
 
-    print("Bot starting successfully with Supabase and APK/OBB options...")
+    print("Bot starting successfully with Video Guide and Supabase support...")
     application.run_polling()
 
 if __name__ == '__main__':
