@@ -30,14 +30,17 @@ BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "8840218731:AAExjF4reevpsWZ7yKP
 ADSTERRA_DIRECT_LINK = "https://araplhn.org/4/a5cf2ac42fc3b28070b87afb456402e7"
 ADMIN_ID = 7122952141
 
+# 🎬 ဒီနေရာမှာ ဂိမ်းတိုင်းအတွက် အမြဲသုံးမယ့် ဒေါင်းနည်းဗီဒီယိုရဲ့ Telegram File ID ကို ထည့်ပါ
+# (သို့မဟုတ် Bot ထဲကို ဗီဒီယိုပို့ပြီး ရလာတဲ့ file_id ကို ဒီမှာ လာကပ်ထည့်နိုင်ပါတယ်)
+GLOBAL_GUIDE_VIDEO_ID = "BAACAgUAAxkBAAI..." # <-- သင်အသုံးပြုလိုသော ဗီဒီယို၏ file_id ကို ဒီမှာ ထည့်ပါ
+
 # Supabase Database URL (Transaction Pooler - IPv4 Compatible)
 DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://postgres.ncjrzuhpdiwrjveogpmt:aungkhainglin12@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres")
 
 WELCOME_IMAGE = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhCrFvWn7BeKrQtNho2cu_CqR-X0f8BuptBTTIt4fzBbAc-rGTu_dQ1pQLUkMGmsRboaG49JqB4jqQXzUJ-W2obNGmN-EwGVcwFMLQnpSO_ZvLNGhTinvQkc1SWOmFmD-ZgelySMmNMqx0qE3UeYIG6OSt06Xd1gu7Hbpc2lPnXm3jw5_9a0E4W_VNYnj0/s736/45709.jpg"
 
-# Conversation States for Adding Game & Video
+# Conversation States for Adding Game
 GET_NAME, GET_PHOTO, GET_APK_CHOICE, GET_APK_CONTENT, GET_OBB_CHOICE, GET_OBB_CONTENT = range(6)
-GET_VIDEO_KEY, GET_VIDEO_CONTENT = range(2, 4)
 
 # Database Connection Helper Function
 def get_db_connection():
@@ -61,8 +64,7 @@ def load_db():
                 "apk_type": row.get('apk_type'),
                 "apk_value": row.get('apk_value'),
                 "obb_type": row.get('obb_type'),
-                "obb_value": row.get('obb_value'),
-                "video_file_id": row.get('video_file_id')
+                "obb_value": row.get('obb_value')
             }
         return db
     except Exception as e:
@@ -97,12 +99,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     game_info = db[game_key]
     game_name = game_info["name"]
     game_image = game_info["image"]
-    video_file_id = game_info.get("video_file_id")
     
     context.user_data['unlocked'] = False
     context.user_data['game_key'] = game_key
     
-    # စာသားများကို သပ်ရပ်စွာ ပြင်ဆင်ထားသည် (HTML Tag အမှားများ မပါတော့ပါ)
+    # စာသားများကို HTML Tag အမှားကင်းစင်စွာ သပ်ရပ်စွာ ပြင်ဆင်ထားသည်
     game_text = (
         f"🔥 **Hey {user.first_name}!** 🔥\n\n"
         f"🎮 **ဂိမ်းအမည်:** {game_name}\n\n"
@@ -120,15 +121,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     try:
-        # ပထမဦးစွာ ဂိမ်းပုံနှင့် စာသားကို ပို့မည်
+        # ၁။ ဂိမ်းပုံနှင့် စာသားကို ပို့မည်
         if game_image:
             await update.message.reply_photo(photo=game_image, caption=game_text, reply_markup=reply_markup, parse_mode="Markdown")
         else:
             await update.message.reply_text(text=game_text, reply_markup=reply_markup, parse_mode="Markdown")
             
-        # အကယ်၍ အဆိုပါဂိမ်းတွင် ဒေါင်းနည်းဗီဒီယို (Video) ထည့်ထားပါက တွဲ၍ ပို့ပေးမည်
-        if video_file_id:
-            await update.message.reply_video(video=video_file_id, caption=f"🎬 **{game_name} - ဒေါင်းလုပ်ဆွဲနည်း ဗီဒီယိုလမ်းညွှန်**", parse_mode="Markdown")
+        # ၂။ သတ်မှတ်ထားသော ဗီဒီယို တစ်ပုဒ်တည်းကိုသာ ဂိမ်းတိုင်းအတွက် အော်တို တွဲ၍ ပို့ပေးမည်
+        if GLOBAL_GUIDE_VIDEO_ID:
+            await update.message.reply_video(video=GLOBAL_GUIDE_VIDEO_ID, caption=f"🎬 **ဂိမ်းဒေါင်းလုဒ်ဆွဲနည်း ဗီဒီယိုလမ်းညွှန်**", parse_mode="Markdown")
             
     except Exception as e:
         print(f"Start command error: {e}")
@@ -161,64 +162,17 @@ async def search_game(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text(msg, reply_markup=reply_markup, parse_mode="Markdown")
 
-# --- ADD VIDEO COMMAND HANDLER ---
-
-async def add_video_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+# --- ADMIN HELPER COMMAND TO GET VIDEO FILE ID ---
+async def get_video_id(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user
     if user.id != ADMIN_ID:
-        await update.message.reply_text("⛔ ဒီ Command ကို Admin တစ်ဦးတည်းသာ သုံးလို့ရပါတယ်။")
-        return ConversationHandler.END
-        
-    await update.message.reply_text(
-        "🎬 **ဂိမ်းဒေါင်းနည်း ဗီဒီယို ထည့်သွင်းခြင်း**\n\n"
-        "ကျေးဇူးပြု၍ ဗီဒီယို ထည့်လိုသော **Game Key** ကို ပို့ပေးပါ (ဥပမာ- `breachnight`):",
-        parse_mode="Markdown"
-    )
-    return GET_VIDEO_KEY
-
-async def receive_video_key(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    text = update.message.text.strip()
-    context.user_data['video_game_key'] = text
+        return
     
-    await update.message.reply_text(
-        f"📥 ကျေးဇူးတင်ပါတယ်။ ဂိမ်း Key: `{text}` အတွက် **ဗီဒီယိုဖိုင် (Video File)** ကို တိုက်ရိုက် တင်ပေးပါ (သို့မဟုတ် Video Note ပို့ပေးပါ):",
-        parse_mode="Markdown"
-    )
-    return GET_VIDEO_CONTENT
-
-async def receive_video_content(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    video = update.message.video or update.message.document
-    if not video:
-        await update.message.reply_text("⚠️ ကျေးဇူးပြု၍ ဗီဒီယိုဖိုင် (Video File) ကိုသာ ပို့ပေးပါ။")
-        return GET_VIDEO_CONTENT
-        
-    video_file_id = video.file_id
-    game_key = context.user_data.get('video_game_key')
-    
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        
-        # Database ထဲတွင် video_file_id ကော်လံ ရှိမရှိ စစ်ဆေးပြီး ထည့်သွင်းခြင်း
-        cur.execute(
-            """
-            UPDATE games SET video_file_id = %s WHERE key = %s;
-            """,
-            (video_file_id, game_key)
-        )
-        conn.commit()
-        cur.close()
-        conn.close()
-        
-        await update.message.reply_text(
-            f"✅ **အောင်မြင်ပါပြီ သားရီး!**\n\n"
-            f"🎮 **Game Key:** `{game_key}` အတွက် ဒေါင်းနည်းဗီဒီယိုကို Supabase သို့ အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ။",
-            parse_mode="Markdown"
-        )
-    except Exception as e:
-        await update.message.reply_text(f"⚠️ ဗီဒီယို သိမ်းဆည်းရာတွင် Error ဖြစ်သွားသည်: {e}")
-        
-    return ConversationHandler.END
+    if update.message.reply_to_message and update.message.reply_to_message.video:
+        vid_id = update.message.reply_to_message.video.file_id
+        await update.message.reply_text(f"📋 **Video File ID:**\n`{vid_id}`", parse_mode="Markdown")
+    else:
+        await update.message.reply_text("⚠️ ကျေးဇူးပြု၍ ဗီဒီယိုဖိုင်ကို Reply လုပ်ပြီး `/get_id` ဟု ရိုက်ပါ။")
 
 # --- CONVERSATION HANDLER FOR ADD GAME ---
 
@@ -231,7 +185,7 @@ async def add_game_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     await update.message.reply_text(
         "🎮 **ဂိမ်းအသစ် စတင်ထည့်သွင်းခြင်း**\n\n"
         "ကျေးဇူးပြု၍ **Game Key** နဲ့ **ဂိမ်းနာမည်** ကို အောက်ပါပုံစံအတိုင်း ပို့ပေးပါ:\n\n"
-        "`dave_the_diver | Dave the Diver`",
+        "`breachnight | BreachNight`",
         parse_mode="Markdown"
     )
     return GET_NAME
@@ -378,7 +332,7 @@ async def save_game_to_db(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     
     bot_username = (await context.bot.get_me()).username
     success_msg = (
-        f"✅ **ဂိမ်းအသစ်ကို Supabase သို့ အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ!**\n\n"
+        f"✅ **ဂိမ်းအသစ်ကို Supabase သို့ အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ သားရီး!**\n\n"
         f"🎮 **နာမည်:** {game_name}\n"
         f"🔗 **Share Link:** `https://t.me/{bot_username}?start={game_key}`"
     )
@@ -401,7 +355,7 @@ async def del_game(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         return
         
     if not context.args:
-        await update.message.reply_text("⚠️ ဖျက်ချင်တဲ့ ဂိမ်းရဲ့ Key ကို ထည့်ပေးပါ။\n\n`/del_game dave_the_diver`", parse_mode="Markdown")
+        await update.message.reply_text("⚠️ ဖျက်ချင်တဲ့ ဂိမ်းရဲ့ Key ကို ထည့်ပေးပါ။\n\n`/del_game breachnight`", parse_mode="Markdown")
         return
         
     game_key = context.args[0].strip()
@@ -472,7 +426,6 @@ def main():
 
     application = Application.builder().token(BOT_TOKEN).build()
     
-    # 1. Add Game Conversation Handler
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("add_game", add_game_start)],
         states={
@@ -492,24 +445,14 @@ def main():
         fallbacks=[CommandHandler("cancel", cancel)],
     )
 
-    # 2. Add Video Conversation Handler
-    video_conv_handler = ConversationHandler(
-        entry_points=[CommandHandler("add_video", add_video_start)],
-        states={
-            GET_VIDEO_KEY: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_video_key)],
-            GET_VIDEO_CONTENT: [MessageHandler(filters.VIDEO | filters.Document.ALL, receive_video_content)],
-        },
-        fallbacks=[CommandHandler("cancel", cancel)],
-    )
-
     application.add_handler(conv_handler)
-    application.add_handler(video_conv_handler)
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("search", search_game))
     application.add_handler(CommandHandler("del_game", del_game))
+    application.add_handler(CommandHandler("get_id", get_video_id))
     application.add_handler(CallbackQueryHandler(button_click))
 
-    print("Bot starting successfully with Video Guide and Supabase support...")
+    print("Bot starting successfully with Global Video Guide...")
     application.run_polling()
 
 if __name__ == '__main__':
