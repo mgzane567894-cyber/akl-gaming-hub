@@ -7,16 +7,12 @@ from psycopg2.extras import RealDictCursor
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, ConversationHandler, filters
 
-# Render Free Web Service အတွက် Fake Server (GET နှင့် HEAD Request နှစ်ခုလုံးကို ဖြေကြားပေးရန်)
+# Render Free Web Service အတွက် Fake Server
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.end_headers()
         self.wfile.write(b"AKL Gaming Hub Bot is running live with Supabase!")
-
-    def do_HEAD(self):
-        self.send_response(200)
-        self.end_headers()
 
 def run_dummy_server():
     port = int(os.environ.get("PORT", 8080))
@@ -78,6 +74,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     args = context.args
     db = load_db()
     
+    # အကယ်၍ Parameter (Game Key) ပါမလာရင် သာမန် Welcome စာသားပြမည်
     if not args:
         welcome_text = (
             f"🔥 **မင်္ဂလာပါ {user.first_name}!** 🔥\n\n"
@@ -91,6 +88,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             await update.message.reply_text(text=welcome_text, parse_mode="Markdown")
         return
 
+    # Deep Link မှတဆင့် Game Key ဖြင့် ရောက်လာသည့်အခါ
     game_key = args[0]
     if game_key not in db:
         await update.message.reply_text("⚠️ ဒီဂိမ်း မရှိသေးပါ။ မကြာမီ တင်ပေးပါမည်။")
@@ -103,12 +101,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     context.user_data['unlocked'] = False
     context.user_data['game_key'] = game_key
     
+    # ဂိမ်းဒေါင်းနည်း (Guide) နှင့် လမ်းညွှန်ချက်များ ထည့်သွင်းထားသော စာသား
     game_text = (
         f"🔥 **Hey {user.first_name}!** 🔥\n\n"
         f"🎮 **ဂိမ်းအမည်:** {game_name}\n\n"
-        "⚡ **ဂိမ်းဖိုင် ရယူရန် အဆင့်များ:**\n"
-        "၁။ အောက်ပါ **'🔓 Unlock Download Link (Ad)'** ကို တစ်ချက်နှိပ်ပြီး ကြော်ငြာကြည့်ပေးပါ။\n"
-        "၂။ ပြီးလျှင် အဲ့ထဲ ပြန်ထွက်လာပြီး **'📥 Download Links ရယူရန်'** ကို နှိပ်ပါ!"
+        "📜 **📥 ဂိမ်းဒေါင်းလုဒ်လုပ်နည်းနှင့် ထည့်သွင်းနည်းလမ်းညွှန်:**\n"
+        "၁။ အောက်ပါ **'🔓 Unlock Download Link (Ad)'** ကို နှိပ်ပြီး Adsterra ကြော်ငြာကို တစ်ချက်ကြည့်ပေးပါ။\n"
+        "၂။ ကြော်ငြာကြည့်ပြီးပါက Bot ဆီသို့ ပြန်လာပြီး **'📥 Download Links ရယူရန်'** ခလုတ်ကို နှိပ်ပါ။\n"
+        "၃။ ထွက်လာမည့် Direct Link (သို့) Telegram File ကို Download ဆွဲပြီး ဖုန်းထဲတွင် ထည့်သွင်းဆော့ကစားနိုင်ပါပြီ[span_2](start_span)[span_2](end_span)!\n\n"
+        "⚡ **အောက်ပါ ခလုတ်ကို အရင်နှိပ်ပေးပါ 👇**"
     )
     
     keyboard = [
